@@ -19,30 +19,37 @@ let globalContent, globalClassName, globalHost;
 io.on("connection", (socket) => {
   console.log("Connected");
 
-  socket.on("user-create", (data) => {
-    const { className, user, host } = data;
-    globalClassName = className;
-    console.log(globalClassName, className, globalContent);
-    socket.join(className);
-    socket.emit("host", host);
-    // io.in(className).emit("canvas-response", globalContent);
-  });
+  // socket.on("user-create", (data) => {
+  //   const { className, user, host } = data;
+  //   globalClassName = className;
+  //   console.log(globalClassName, className, globalContent);
+  //   socket.join(className);
+  //   socket.emit("host", host);
+  //   // io.in(className).emit("canvas-response", globalContent);
+  // });
 
   socket.on("user-joined", (data) => {
     const { className, user, host } = data;
-    socket.emit("host", host);
-    console.log(globalClassName, className, globalContent);
+    if (host) {
+      globalClassName = className;
+    }
     if (globalClassName !== className) {
       socket.emit("inactive-class", { success: true });
     }
-    socket.broadcast.to(className).emit("user-joined", { success: true });
-    socket.emit("canvas-response", globalContent);
+    socket.join(className);
+    socket.emit("host", host);
+    console.log(globalClassName, className, globalContent);
+
+    if (!host) {
+      socket.broadcast.to(className).emit("user-joined", { success: true });
+    }
+    socket.broadcast.to(className).emit("canvas-response", globalContent);
   });
 
   socket.on("canvas-data", (data) => {
     globalContent = data;
     console.log(data);
-    io.in(globalClassName).emit("canvas-response", data);
+    socket.broadcast.to(globalClassName).emit("canvas-response", data);
   });
 
   socket.on("disconnect", () => {
