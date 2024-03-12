@@ -1,66 +1,68 @@
 import express from "express";
-import http from "http";
+import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 
 const port = 10000;
 const app = express();
+const server = createServer(app);
+
 app.use(cors());
-const server = http.createServer(app);
+
 const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
+    connectionStateRecovery: {},
   },
 });
 
-let globalContent, globalClassName, globalHost;
+let globalContent,
+  globalHost,
+  globalId,
+  globalClassName = [];
 
 io.on("connection", (socket) => {
   console.log("Connected");
 
-  // socket.on("user-create", (data) => {
-  //   const { className, user, host } = data;
-  //   globalClassName = className;
-  //   console.log(globalClassName, className, globalContent);
-  //   socket.join(className);
-  //   socket.emit("host", host);
-  //   // io.in(className).emit("canvas-response", globalContent);
-  // });
+  socket.on("user-create", (data) => {
+    const { className, host, id } = data;
+    globalClassName.push(id);
+    console.log(globalClassName);
+    socket.join(id);
+    socket.emit("host", { host, id, className });
+  });
 
   socket.on("user-joined", (data) => {
-    const { className, user, host } = data;
-    if (host) {
-      globalClassName = className;
-    }
-    if (globalClassName !== className) {
+    const { id, host } = data;
+
+    if (!globalClassName.includes(id)) {
       socket.emit("inactive-class", { success: true });
     }
-    socket.join(className);
-    socket.emit("host", host);
-    console.log(globalClassName, className, globalContent);
+    socket.join(id);
+    socket.emit("host", { host });
 
     if (!host) {
-      socket.broadcast.to(className).emit("user-joined", { success: true });
+      socket.broadcast.to(id).emit("user-joined", { success: true });
     }
-    socket.broadcast.to(className).emit("canvas-response", globalContent);
+    // socket.emit("canvas-response", globalContent);
   });
 
-  socket.on("canvas-data", (data) => {
-    globalContent = data;
-    console.log(data);
-    socket.broadcast.to(globalClassName).emit("canvas-response", data);
-  });
+  // socket.on("canvas-data", (data) => {
+  //   globalContent = data;
+  //   console.log(data);
+  //   socket.broadcast.to(globalClassName).emit("canvas-response", data);
+  // });
 
   socket.on("disconnect", () => {
     console.log("Disconnected");
   });
 });
 
+app.get("/", (req, res) => {
+  res.send("MathCollab server active");
+});
+
 server.listen(port, () =>
   console.log(`server is running on http://localhost:${port}`)
 );
-
-app.get("/", (req, res) => {
-  res.send("MathCollab server");
-});
