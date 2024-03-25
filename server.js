@@ -17,6 +17,7 @@ const io = new Server(server, {
 });
 
 let globalClassName = [];
+let globalContent = "";
 
 io.on("connection", (socket) => {
   console.log("Connected");
@@ -28,6 +29,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("start-class", (id) => {
+    socket.join(id);
     setTimeout(() => {
       socket.emit("class-started", { success: true });
     }, 100);
@@ -35,26 +37,27 @@ io.on("connection", (socket) => {
 
   socket.on("join-class", (data) => {
     const { id, user } = data;
-    console.log(id, user);
+    socket.join(id);
     const lesson = globalClassName.filter((item) => item.id === id);
-    console.log(lesson);
     if (lesson[0].status === "created") {
-      console.log("created");
-      // setTimeout(() => {
       socket.emit("failed-join", { success: false });
-      // }, 1000);
     }
 
     if (lesson[0].status === "ongoing") {
-      console.log("ongoing");
-      // setTimeout(() => {
       socket.emit("joined-successfully", { success: true });
       socket.broadcast.emit("joined", { success: true, user });
-      // }, 1000);
     }
   });
 
-  // console.log(globalClassName);
+  socket.on("content", (content) => {
+    console.log(content);
+    globalContent = content;
+    socket.broadcast.emit("content-data", content);
+  });
+
+  console.log(globalContent);
+
+  io.emit("content-data", globalContent);
 
   socket.on("disconnect", () => {
     console.log("Disconnected");
