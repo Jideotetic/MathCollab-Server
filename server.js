@@ -6,7 +6,6 @@ import cors from "cors";
 const port = 10000;
 const app = express();
 const server = createServer(app);
-
 app.use(cors());
 
 const io = new Server(server, {
@@ -17,42 +16,45 @@ const io = new Server(server, {
   },
 });
 
-let globalContent,
-  globalHost,
-  globalId,
-  globalClassName = [];
+let globalClassName = [];
 
 io.on("connection", (socket) => {
   console.log("Connected");
 
-  socket.on("user-create", (data) => {
-    const { className, host, id } = data;
-    globalClassName.push(id);
-    console.log(globalClassName);
-    socket.join(id);
-    socket.emit("host", { host, id, className });
+  socket.on("connected", (lessons) => {
+    console.log("connected", globalClassName);
+    globalClassName = lessons;
+    socket.emit("connected-successfully", { success: true });
   });
 
-  socket.on("user-joined", (data) => {
-    const { id, host } = data;
-
-    if (!globalClassName.includes(id)) {
-      socket.emit("inactive-class", { success: true });
-    }
-    socket.join(id);
-    socket.emit("host", { host });
-
-    if (!host) {
-      socket.broadcast.to(id).emit("user-joined", { success: true });
-    }
-    // socket.emit("canvas-response", globalContent);
+  socket.on("start-class", (id) => {
+    setTimeout(() => {
+      socket.emit("class-started", { success: true });
+    }, 100);
   });
 
-  // socket.on("canvas-data", (data) => {
-  //   globalContent = data;
-  //   console.log(data);
-  //   socket.broadcast.to(globalClassName).emit("canvas-response", data);
-  // });
+  socket.on("join-class", (data) => {
+    const { id, user } = data;
+    console.log(id, user);
+    const lesson = globalClassName.filter((item) => item.id === id);
+    console.log(lesson);
+    if (lesson[0].status === "created") {
+      console.log("created");
+      // setTimeout(() => {
+      socket.emit("failed-join", { success: false });
+      // }, 1000);
+    }
+
+    if (lesson[0].status === "ongoing") {
+      console.log("ongoing");
+      // setTimeout(() => {
+      socket.emit("joined-successfully", { success: true });
+      socket.broadcast.emit("joined", { success: true, user });
+      // }, 1000);
+    }
+  });
+
+  // console.log(globalClassName);
 
   socket.on("disconnect", () => {
     console.log("Disconnected");
