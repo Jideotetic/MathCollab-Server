@@ -17,15 +17,15 @@ const io = new Server(server, {
 });
 
 let globalClassName = [];
+let globalTexts = [];
 let globalContent = "";
 
 io.on("connection", (socket) => {
   console.log("Connected");
 
   socket.on("connected", (lessons) => {
-    console.log("connected", globalClassName);
     globalClassName = lessons;
-    socket.emit("connected-successfully", { success: true });
+    socket.emit("initial-text", globalTexts);
   });
 
   socket.on("start-class", (id) => {
@@ -50,12 +50,16 @@ io.on("connection", (socket) => {
   });
 
   socket.on("content", (content) => {
-    console.log(content);
     globalContent = content;
     socket.broadcast.emit("content-data", content);
   });
 
-  console.log(globalContent);
+  socket.on("text", (text) => {
+    globalTexts.push(text);
+    setTimeout(() => {
+      io.emit("text", globalTexts);
+    }, 100);
+  });
 
   io.emit("content-data", globalContent);
 
