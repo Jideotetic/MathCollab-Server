@@ -12,19 +12,19 @@ const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
-    connectionStateRecovery: {},
   },
 });
 
-let globalClassName = [];
+let globalClasses;
 let globalTexts = [];
 let globalContent = "";
 
 io.on("connection", (socket) => {
   console.log("Connected");
 
-  socket.on("connected", (lessons) => {
-    globalClassName = lessons;
+  socket.on("send-classes", (classes) => {
+    globalClasses = classes;
+    console.log(globalClasses);
     socket.emit("initial-text", globalTexts);
   });
 
@@ -38,8 +38,8 @@ io.on("connection", (socket) => {
   socket.on("join-class", (data) => {
     const { id, user } = data;
     socket.join(id);
-    const lesson = globalClassName.filter((item) => item.id === id);
-    if (lesson[0].status === "created") {
+    const lesson = globalClasses.filter((item) => item.id === id);
+    if (lesson[0].status === "upcoming") {
       socket.emit("failed-join", { success: false });
     }
 
@@ -61,7 +61,7 @@ io.on("connection", (socket) => {
     }, 100);
   });
 
-  io.emit("content-data", globalContent);
+  socket.emit("content-data", globalContent);
 
   socket.on("disconnect", () => {
     console.log("Disconnected");
