@@ -31,7 +31,7 @@ io.on("connection", (socket) => {
   socket.on("start-class", (id) => {
     socket.join(id);
     setTimeout(() => {
-      socket.emit("class-started", { success: true });
+      socket.emit("class-started", { success: true, host: true });
     }, 100);
   });
 
@@ -44,7 +44,7 @@ io.on("connection", (socket) => {
     }
 
     if (lesson[0].status === "ongoing") {
-      socket.emit("joined-successfully", { success: true });
+      socket.emit("joined-successfully", { success: true, host: false });
       socket.broadcast.emit("joined", { success: true, user });
     }
   });
@@ -73,5 +73,5 @@ app.get("/", (req, res) => {
 });
 
 server.listen(port, () =>
-  console.log(`server is running on http://localhost:${port}`)
+  console.log(`server is running on http://localhost:${port}`),
 );
