@@ -22,6 +22,10 @@ let globalContent = "";
 io.on("connection", (socket) => {
   console.log("Connected");
 
+  socket.on("like", (data) => {
+    socket.broadcast.emit("liked", data);
+  });
+
   socket.on("send-classes", (classes) => {
     globalClasses = classes;
     console.log(globalClasses);
