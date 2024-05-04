@@ -37,7 +37,12 @@ io.on("connection", (socket) => {
     setTimeout(() => {
       socket.emit("class-started", { success: true, host: true });
     }, 100);
+    socket.broadcast.emit("class-started", { success: true });
   });
+
+  // socket.on("class-status", () => {
+  //   socket.broadcast.emit("class-status-success");
+  // });
 
   socket.on("join-class", (data) => {
     const { id, user } = data;
