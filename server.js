@@ -15,72 +15,42 @@ const io = new Server(server, {
   },
 });
 
-let classes;
-let globalTexts = [];
-let globalContent = "";
-
 io.on("connection", (socket) => {
   console.log("Connected");
 
-  socket.on("send-classes", (classes) => {
-    classes = classes;
-    console.log(classes);
-    socket.emit("initial-text", globalTexts);
+  socket.on("class-created", () => {
+    socket.broadcast.emit("class-created-successfully");
   });
 
-  socket.on("like", (data) => {
-    socket.broadcast.emit("liked", data);
+  socket.on("like", () => {
+    socket.broadcast.emit("like-successfully");
   });
 
   socket.on("register", (data) => {
-    socket.broadcast.emit("registered", data);
+    socket.broadcast.emit("register-successfully", data);
   });
 
   socket.on("start-class", (id) => {
     socket.join(id);
-    socket.broadcast.emit("start-class", id);
+    console.log(id);
+    socket.broadcast.emit("start-class-successfully");
     setTimeout(() => {
       socket.emit("class-started", { success: true, host: true });
-    }, 100);
+    }, 500);
   });
 
-  socket.on("end-class", () => {
-    socket.broadcast.emit("start-class", "");
+  socket.on("stopped-class", () => {
+    socket.broadcast.emit("stopped-class-successfully");
   });
-
-  // socket.on("send-classes", (classes) => {
-  //   globalClasses = classes;
-  //   console.log(globalClasses);
-  //   socket.emit("initial-text", globalTexts);
-  // });
 
   // socket.on("join-class", (data) => {
   //   const { id, user } = data;
   //   socket.join(id);
-  //   const lesson = globalClasses.filter((item) => item.id === id);
-  //   if (lesson[0].status === "upcoming") {
-  //     socket.emit("failed-join", { success: false });
-  //   }
+  //   console.log(id);
 
-  //   if (lesson[0].status === "ongoing") {
-  //     socket.emit("joined-successfully", { success: true, host: false });
-  //     socket.broadcast.emit("joined", { success: true, user });
-  //   }
+  //   socket.emit("joined-successfully", { success: true, host: false });
+  //   socket.broadcast.emit("joined", { success: true, user });
   // });
-
-  // socket.on("content", (content) => {
-  //   globalContent = content;
-  //   socket.broadcast.emit("content-data", content);
-  // });
-
-  // socket.on("text", (text) => {
-  //   globalTexts.push(text);
-  //   setTimeout(() => {
-  //     io.emit("text", globalTexts);
-  //   }, 100);
-  // });
-
-  // socket.emit("content-data", globalContent);
 
   socket.on("disconnect", () => {
     console.log("Disconnected");
