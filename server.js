@@ -20,6 +20,9 @@ io.on("connection", (socket) => {
 
   socket.on("class-created", () => {
     socket.broadcast.emit("class-created-successfully");
+    setTimeout(() => {
+      socket.emit("class-created");
+    }, 1000);
   });
 
   socket.on("like", () => {
@@ -32,25 +35,25 @@ io.on("connection", (socket) => {
 
   socket.on("start-class", (id) => {
     socket.join(id);
-    console.log(id);
     socket.broadcast.emit("start-class-successfully");
     setTimeout(() => {
-      socket.emit("class-started", { success: true, host: true });
-    }, 500);
+      socket.emit("class-started");
+    }, 1000);
   });
 
   socket.on("stopped-class", () => {
     socket.broadcast.emit("stopped-class-successfully");
+    socket.emit("stopped-class-successfully");
   });
 
-  // socket.on("join-class", (data) => {
-  //   const { id, user } = data;
-  //   socket.join(id);
-  //   console.log(id);
-
-  //   socket.emit("joined-successfully", { success: true, host: false });
-  //   socket.broadcast.emit("joined", { success: true, user });
-  // });
+  socket.on("join-class", (data) => {
+    const { id, user } = data;
+    socket.join(id);
+    setTimeout(() => {
+      socket.emit("joined-successfully", { user });
+    }, 1000);
+    io.to(id).emit("joined", { success: true, user });
+  });
 
   socket.on("disconnect", () => {
     console.log("Disconnected");
