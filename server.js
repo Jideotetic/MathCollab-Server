@@ -51,8 +51,14 @@ io.on("connection", (socket) => {
     socket.join(id);
     setTimeout(() => {
       socket.emit("joined-successfully", { user });
+      socket.broadcast.to(id).emit("joined", { user });
     }, 1000);
-    io.to(id).emit("joined", { success: true, user });
+  });
+
+  socket.on("text", (data) => {
+    const { newContent, id } = data;
+    socket.join("id");
+    io.to(id).emit("receive-text", { newContent });
   });
 
   socket.on("disconnect", () => {
