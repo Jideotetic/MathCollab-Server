@@ -15,6 +15,8 @@ const io = new Server(server, {
   },
 });
 
+const classesContent = {};
+
 io.on("connection", (socket) => {
   console.log("Connected");
 
@@ -35,10 +37,13 @@ io.on("connection", (socket) => {
 
   socket.on("start-class", (id) => {
     socket.join(id);
+    classesContent[id] = [];
     socket.broadcast.emit("start-class-successfully");
     setTimeout(() => {
       socket.emit("class-started");
     }, 1000);
+
+    console.log(classesContent);
   });
 
   socket.on("stopped-class", () => {
@@ -49,16 +54,33 @@ io.on("connection", (socket) => {
   socket.on("join-class", (data) => {
     const { id, user } = data;
     socket.join(id);
+    const newContent = classesContent[id];
     setTimeout(() => {
       socket.emit("joined-successfully", { user });
+      socket.emit("receive-initial-text", newContent);
       socket.broadcast.to(id).emit("joined", { user });
     }, 1000);
+    console.log(classesContent[id]);
   });
 
-  socket.on("text", (data) => {
+  socket.on("rejoined-class", (id) => {
+    socket.join(id);
+    const newContent = classesContent[id];
+    socket.emit("receive-initial-text", newContent);
+    // if (classesContent[id]) {
+    //   classesContent[id] = classesContent[id];
+    //   socket.emit("receive-initial-text", newContent);
+    // } else {
+    //   classesContent[id] = [];
+    // }
+  });
+
+  socket.on("send-text", (data) => {
     const { newContent, id } = data;
     socket.join("id");
-    io.to(id).emit("receive-text", { newContent });
+    classesContent[id] = [...newContent];
+    socket.broadcast.to(id).emit("receive-text", newContent);
+    console.log(classesContent);
   });
 
   socket.on("disconnect", () => {
