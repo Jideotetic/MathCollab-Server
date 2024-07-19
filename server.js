@@ -89,7 +89,7 @@ io.on("connection", (socket) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("MathCollab server active");
+  res.send("MathCollab server is active");
 });
 
 server.listen(port, () =>
